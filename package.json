@@ -1,0 +1,15 @@
+{
+  "name": "jark-ai-platform",
+  "version": "1.2.0",
+  "type": "module",
+  "description": "AI Branding & Content Platform by JARK TECH",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "openai": "^4.26.0"
+  }
+}
