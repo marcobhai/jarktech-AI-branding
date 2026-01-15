@@ -8,45 +8,43 @@ dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static("public"));
 
-// Use API key from .env
+// OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
 // Health check
-app.get("/health", (req, res) => res.send("JARK AI Platform is running ✅"));
-
+app.get("/health", (req, res) => {
+  res.send("JARK AI Platform is running ✅");
+});
 
 /* ---------- BRAND ENGINE ---------- */
 app.post("/api/brand", async (req, res) => {
   try {
-    console.log("Branding request:", req.body);
     const { name, type, problem, tone, lang } = req.body;
 
-    const langRule = lang === "ne"
-      ? "Respond only in Nepali language."
-      : "Respond only in English.";
+    const langRule =
+      lang === "ne"
+        ? "Respond only in Nepali language."
+        : "Respond only in English.";
 
     const prompt = `
 You are a senior branding strategist.
 ${langRule}
-
-Create a BRAND BLUEPRINT for:
 
 Company: ${name}
 Industry: ${type}
 Core Problem: ${problem}
 Brand Tone: ${tone}
 
-Deliver clearly:
-1. Brand Personality (bullet points)
-2. Brand Positioning Statement
-3. Strong Slogan (1)
-4. Logo Style Direction
-5. Content Theme Direction
-6. 3 Branding Do's & Don'ts
+Deliver:
+1. Brand Personality
+2. Positioning Statement
+3. Slogan
+4. Logo Style
+5. Content Direction
+6. Do's & Don'ts
 `;
 
     const response = await openai.chat.completions.create({
@@ -56,39 +54,31 @@ Deliver clearly:
     });
 
     res.json({ data: response.choices[0].message.content });
-
   } catch (e) {
-    console.error("Branding error:", e);
-    res.status(500).json({ error: "Branding generation failed" });
+    console.error(e);
+    res.status(500).json({ error: "Branding failed" });
   }
 });
-
 
 /* ---------- CONTENT ENGINE ---------- */
 app.post("/api/content", async (req, res) => {
   try {
-    console.log("Content request:", req.body);
     const { brandData, platform, goal, lang } = req.body;
 
-    const langRule = lang === "ne"
-      ? "Respond only in Nepali language."
-      : "Respond only in English.";
+    const langRule =
+      lang === "ne"
+        ? "Respond only in Nepali language."
+        : "Respond only in English.";
 
     const prompt = `
 You are a content growth expert.
 ${langRule}
 
-Brand Blueprint:
+Brand:
 ${brandData}
 
 Platform: ${platform}
 Goal: ${goal}
-
-Generate:
-1. 5 UNIQUE content ideas (not generic)
-2. 1 full short-video script (hook → value → CTA)
-3. Trending topic angle (platform-appropriate)
-4. Music/Mood suggestion
 `;
 
     const response = await openai.chat.completions.create({
@@ -98,43 +88,32 @@ Generate:
     });
 
     res.json({ data: response.choices[0].message.content });
-
   } catch (e) {
-    console.error("Content error:", e);
-    res.status(500).json({ error: "Content generation failed" });
+    console.error(e);
+    res.status(500).json({ error: "Content failed" });
   }
 });
-
 
 /* ---------- LOGO ENGINE ---------- */
 app.post("/api/logo", async (req, res) => {
   try {
-    console.log("Logo request:", req.body);
     const { name, type, tone } = req.body;
 
     const image = await openai.images.generate({
       model: "gpt-image-1",
-      prompt: `
-Professional brand logo for "${name}".
-Industry: ${type}
-Tone: ${tone}
-Style: minimal, flat, scalable, modern
-No text mockups, clean background.
-`,
+      prompt: `Minimal modern logo for ${name}, industry ${type}, tone ${tone}`,
       size: "1024x1024"
     });
 
     res.json({ image: image.data[0].url });
-
   } catch (e) {
-    console.error("Logo error:", e);
-    res.status(500).json({ error: "Logo generation failed" });
+    console.error(e);
+    res.status(500).json({ error: "Logo failed" });
   }
 });
 
-// 404 fallback
-app.use((req, res) => res.status(404).send("Route not found 🚫"));
-
-// Start server
-const PORT = 3000;
-app.listen(PORT, () => console.log(`🚀 JARK AI Platform running at http://localhost:${PORT}`));
+// Start server (Render compatible)
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 JARK AI Platform running on port ${PORT}`);
+});
